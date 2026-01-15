@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SiamRandom - ศูนย์รวมวงล้อสุ่มเสี่ยงดวง</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap');
+        
+        body { 
+            font-family: 'Kanit', sans-serif; 
+            background-color: #20232a; /* พื้นหลังสีเข้ม เข้ากับธีมวงล้อ */
+            color: white;
+            text-align: center; 
+            padding: 40px 20px;
+            margin: 0;
+        }
+
+        h1 { 
+            font-size: 36px;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px #000000;
+        }
+
+        p.subtitle {
+            color: #aaa;
+            margin-bottom: 40px;
+            font-size: 18px;
+        }
+
+        .menu-container { 
+            display: flex; 
+            flex-wrap: wrap; 
+            justify-content: center; 
+            gap: 30px; 
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .card { 
+            background: #2c313c; 
+            border-radius: 20px; 
+            padding: 30px; 
+            width: 280px; 
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3); 
+            transition: transform 0.3s, box-shadow 0.3s; 
+            border: 1px solid #3d424e;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .card:hover { 
+            transform: translateY(-10px); 
+            box-shadow: 0 15px 30px rgba(0,0,0,0.5);
+            border-color: #ff4757;
+        }
+
+        .icon {
+            font-size: 60px;
+            margin-bottom: 20px;
+        }
+
+        .card h2 { 
+            color: #fff; 
+            margin: 0 0 10px 0; 
+            font-size: 24px;
+        }
+
+        .card p { 
+            color: #bbb; 
+            font-size: 15px; 
+            line-height: 1.5;
+            margin-bottom: 25px;
+            flex-grow: 1; /* ดันปุ่มลงไปล่างสุดเสมอ */
+        }
+
+        .btn { 
+            display: inline-block; 
+            padding: 12px 30px; 
+            background: linear-gradient(45deg, #ff4757, #ff6b81);
+            color: white; 
+            text-decoration: none; 
+            border-radius: 50px; 
+            font-weight: bold;
+            transition: 0.2s;
+            box-shadow: 0 4px 10px rgba(255, 71, 87, 0.4);
+        }
+
+        .btn:hover { 
+            transform: scale(1.05);
+            box-shadow: 0 6px 15px rgba(255, 71, 87, 0.6);
+        }
+    </style>
+</head>
+<body>
+
+    <h1>🎡 SiamRandom</h1>
+    <p class="subtitle">ศูนย์รวมวงล้อสุ่มเสี่ยงดวง เลือกหัวข้อที่คุณต้องการเลย!</p>
+
+    <div class="menu-container">
+        
+        <div class="card">
+            <div class="icon">🍜</div>
+            <h2>เมนูลับจับคู่</h2>
+            <p>คิดไม่ออกจะกินอะไรใน 7-11? ให้วงล้อช่วยจับคู่เมนูเด็ดๆ ให้คุณ</p>
+            <a href="food.html" class="btn">เล่นเลย</a>
+        </div>
+
+        <div class="card">
+            <div class="icon">🤫</div>
+            <h2>ข้ออ้างแห่งชาติ</h2>
+            <p>หาทางหนีทีไล่ไม่ออก? สุ่มข้ออ้างเนียนๆ ไปบอกเพื่อนหรือเจ้านาย</p>
+            <a href="excuse.html" class="btn">เล่นเลย</a>
+        </div>
+
+        <div class="card">
+            <div class="icon">💘</div>
+            <h2>เซียมซีความรัก</h2>
+            <p>จะทักหรือจะถอย? ให้วงล้อทำนายกันดูว่าความรักครั้งนี้จะเป็นไง</p>
+            <a href="love.html" class="btn">เล่นเลย</a>
+        </div>
+
+    </div>
+
+    <footer style="margin-top: 50px; color: #555; font-size: 14px;">
+        © 2026 SiamRandom by Mark
+    </footer>
+
+</body>
+</html>

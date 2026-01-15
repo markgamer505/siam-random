@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <script>
+        const PAGE_TITLE = "วงล้อสุ่มเมนูจับคู่ - SiamRandom"; 
+        const HEADER_TEXT = "🍜 เมนูลับจับคู่ 7-11"; 
+        const ITEM_LIST = [
+            "มาม่าต้มยำ + นมจืด",
+            "ไข่ตุ๋น + สาหร่ายอบ",
+            "ข้าวสวย + น้ำพริกนรก",
+            "ไส้กรอกชีส + ครัวซองต์",
+            "โจ๊กกระป๋อง + ไข่ออนเซ็น",
+            "สไปรท์ + บ๊วยเค็ม",
+            "ขนมจีบกุ้ง + ซาลาเปาหมูสับ",
+            "เบอร์เกอร์ข้าวเหนียวหมูย่าง"
+        ];
+        const COLORS = ["#FF5733", "#FFBD33", "#DBFF33", "#75FF33", "#33FF57", "#33FFBD", "#33DBFF", "#3357FF"];
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="pageTitle">Random Tools</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;600&display=swap');
+        
+        /* 1. แก้ไข Box Sizing เพื่อให้ขนาดเป๊ะทุกพิกเซล */
+        * { box-sizing: border-box; }
+
+        body { font-family: 'Kanit', sans-serif; text-align: center; background: #282c34; color: white; margin: 0; padding: 20px; overflow-x: hidden; }
+        
+        /* Tab Switcher */
+        .mode-switch { margin-bottom: 20px; display: flex; justify-content: center; gap: 10px; }
+        .mode-btn { padding: 10px 20px; border-radius: 20px; border: 2px solid #555; background: transparent; color: #aaa; cursor: pointer; font-size: 16px; transition: 0.3s; }
+        .mode-btn.active { background: #ff4757; color: white; border-color: #ff4757; font-weight: bold; }
+        
+        h1 { margin-bottom: 20px; text-shadow: 2px 2px 4px #000000; }
+        
+        /* Container */
+        .game-container { display: none; }
+        .game-container.active { display: block; animation: fadeIn 0.5s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* --- WHEEL STYLE --- */
+        .wheel-wrapper { display: flex; justify-content: center; align-items: center; margin-bottom: 20px; }
+        .wheel-container { position: relative; width: 320px; height: 320px; }
+        canvas { width: 100%; height: 100%; transition: transform 4s cubic-bezier(0.25, 0.1, 0.25, 1); filter: drop-shadow(0 0 10px rgba(0,0,0,0.5)); }
+        .arrow { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 25px solid transparent; border-right: 25px solid transparent; border-top: 50px solid #ff4757; z-index: 10; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.3)); }
+
+        /* --- SLOT STYLE (ปรับปรุงใหม่) --- */
+        .slot-machine-frame {
+            background: linear-gradient(135deg, #d35400, #f39c12);
+            padding: 20px;
+            border-radius: 20px;
+            width: 320px; /* กว้างขึ้นนิดหน่อย */
+            margin: 0 auto;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            border: 5px solid #e67e22;
+            position: relative;
+        }
+        .slot-window {
+            background: white;
+            height: 100px; /* ความสูงช่องมอง (Fixed) */
+            overflow: hidden;
+            border-radius: 10px;
+            border: 4px solid #333; /* ขอบหนา */
+            position: relative;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.4);
+        }
+        .slot-strip {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            text-align: center;
+            /* เอา transition ออกจาก CSS หลัก เพื่อคุมด้วย JS แทน */
+        }
+        .slot-item {
+            height: 100px; /* ต้องเท่ากับ slot-window เป๊ะๆ */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px; /* ลดขนาดฟอนต์ลงนิดนึงกันล้น */
+            font-weight: bold;
+            color: #333;
+            border-bottom: 1px solid #ddd;
+            padding: 0 10px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        /* เส้นสีแดงคาดกลางสล็อต */
+        .slot-line {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 100%;
+            height: 4px; /* หนาขึ้น */
+            background: rgba(231, 76, 60, 0.6);
+            z-index: 5;
+            pointer-events: none;
+            margin-top: -2px; /* จัดกึ่งกลาง */
+            box-shadow: 0 0 5px rgba(231, 76, 60, 0.8);
+        }
+
+        /* Buttons */
+        .spin-btn { margin-top: 25px; padding: 15px 50px; font-size: 22px; border: none; border-radius: 50px; background: linear-gradient(45deg, #ff4757, #ff6b81); color: white; cursor: pointer; box-shadow: 0 5px 15px rgba(255, 71, 87, 0.4); font-family: 'Kanit', sans-serif; font-weight: bold; transition: all 0.2s; }
+        .spin-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(255, 71, 87, 0.6); }
+        .spin-btn:disabled { background: #555; cursor: not-allowed; box-shadow: none; transform: none; }
+        
+        #result { margin-top: 25px; font-size: 26px; color: #f1c40f; font-weight: bold; min-height: 40px; text-shadow: 1px 1px 2px black; }
+        .back-btn { margin-top: 40px; display: inline-block; color: #aaa; text-decoration: none; border: 2px solid #555; padding: 8px 20px; border-radius: 30px; }
+
+        /* Animation สั่นตอนจบ */
+        @keyframes shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            10% { transform: translate(-1px, -2px) rotate(-1deg); }
+            20% { transform: translate(-3px, 0px) rotate(1deg); }
+            30% { transform: translate(3px, 2px) rotate(0deg); }
+            40% { transform: translate(1px, -1px) rotate(1deg); }
+            50% { transform: translate(-1px, 2px) rotate(-1deg); }
+            60% { transform: translate(-3px, 1px) rotate(0deg); }
+            70% { transform: translate(3px, 1px) rotate(-1deg); }
+            80% { transform: translate(-1px, -1px) rotate(1deg); }
+            90% { transform: translate(1px, 2px) rotate(0deg); }
+            100% { transform: translate(1px, -2px) rotate(-1deg); }
+        }
+        .shaking {
+            animation: shake 0.5s;
+            animation-iteration-count: 1;
+        }
+
+        /* Responsive Mobile */
+        @media (max-width: 400px) {
+            .wheel-container { width: 280px; height: 280px; }
+            .slot-machine-frame { width: 280px; }
+            h1 { font-size: 24px; }
+            .slot-item { font-size: 18px; }
+        }
+    </style>
+</head>
+<body>
+
+    <h1 id="headerText">Title</h1>
+
+    <div class="mode-switch">
+        <button class="mode-btn active" onclick="switchMode('wheel')">🎡 แบบวงล้อ</button>
+        <button class="mode-btn" onclick="switchMode('slot')">🎰 แบบสล็อต</button>
+    </div>
+
+    <div id="game-wheel" class="game-container active">
+        <div class="wheel-wrapper">
+            <div class="wheel-container">
+                <div class="arrow"></div>
+                <canvas id="wheel" width="600" height="600"></canvas>
+            </div>
+        </div>
+        <button class="spin-btn" id="spinBtnWheel" onclick="spinWheel()">หมุนวงล้อ!</button>
+    </div>
+
+    <div id="game-slot" class="game-container">
+        <div class="slot-machine-frame" id="slotFrame">
+            <div class="slot-window">
+                <div class="slot-line"></div>
+                <ul class="slot-strip" id="slotStrip">
+                    </ul>
+            </div>
+        </div>
+        <button class="spin-btn" id="spinBtnSlot" style="background: linear-gradient(45deg, #f39c12, #d35400);" onclick="spinSlot()">โยกสล็อต!</button>
+    </div>
+
+    <div id="result">✨ เลือกวิธีสุ่มได้เลย! ✨</div>
+    <br>
+    <a href="index.html" class="back-btn">⬅ กลับหน้าหลัก</a>
+
+    <script>
+        // Apply Config
+        document.getElementById('pageTitle').innerText = PAGE_TITLE;
+        document.getElementById('headerText').innerText = HEADER_TEXT;
+
+        // --- GLOBAL VARIABLES ---
+        let isSpinning = false;
+        let currentSlotIndex = 0; // ตำแหน่งปัจจุบันของสล็อต
+
+        // ==========================
+        // 🎡 WHEEL LOGIC
+        // ==========================
+        const canvas = document.getElementById('wheel');
+        const ctx = canvas.getContext('2d');
+        const size = 600; const center = size / 2;
+
+        function drawWheel() {
+            const arc = (2 * Math.PI) / ITEM_LIST.length;
+            for (let i = 0; i < ITEM_LIST.length; i++) {
+                ctx.beginPath();
+                ctx.fillStyle = COLORS[i % COLORS.length];
+                ctx.moveTo(center, center);
+                ctx.arc(center, center, center - 10, i * arc, (i + 1) * arc);
+                ctx.lineTo(center, center);
+                ctx.fill();
+                ctx.lineWidth = 2; ctx.strokeStyle = "#282c34"; ctx.stroke();
+
+                ctx.save();
+                ctx.translate(center, center);
+                ctx.rotate(i * arc + arc / 2);
+                const textRadius = center - 40;
+                ctx.textAlign = "right"; ctx.textBaseline = "middle";
+                ctx.fillStyle = "#000000"; ctx.font = "bold 22px Kanit";
+                let textStr = ITEM_LIST[i];
+                if (textStr.length > 18) textStr = textStr.substring(0, 17) + "...";
+                ctx.shadowColor = "rgba(255, 255, 255, 0.8)"; ctx.shadowBlur = 4;
+                ctx.fillText(textStr, textRadius, 0);
+                ctx.restore();
+            }
+            ctx.beginPath(); ctx.arc(center, center, 30, 0, 2 * Math.PI);
+            ctx.fillStyle = "#282c34"; ctx.fill();
+            ctx.beginPath(); ctx.arc(center, center, 10, 0, 2 * Math.PI);
+            ctx.fillStyle = "white"; ctx.fill();
+        }
+
+        function spinWheel() {
+            if (isSpinning) return;
+            isSpinning = true;
+            document.getElementById('result').innerText = "🎲 กำลังหมุน...";
+            document.getElementById('spinBtnWheel').disabled = true;
+            document.getElementById('spinBtnSlot').disabled = true;
+
+            const spinTime = 4000;
+            const extraRounds = 5;
+            const randomDegree = Math.floor(Math.random() * 360);
+            const totalDegree = (extraRounds * 360) + randomDegree;
+
+            canvas.style.transition = `transform ${spinTime}ms cubic-bezier(0.25, 0.1, 0.25, 1)`;
+            canvas.style.transform = `rotate(-${totalDegree}deg)`;
+
+            setTimeout(() => {
+                isSpinning = false;
+                document.getElementById('spinBtnWheel').disabled = false;
+                document.getElementById('spinBtnSlot').disabled = false;
+                
+                const degreeResult = (270 + randomDegree) % 360;
+                const step = 360 / ITEM_LIST.length;
+                const index = Math.floor(degreeResult / step);
+
+                document.getElementById('result').innerHTML = "🎉 ผู้ชนะคือ: <span style='color:white;'>" + ITEM_LIST[index] + "</span>";
+                
+                canvas.style.transition = 'none';
+                canvas.style.transform = `rotate(-${totalDegree % 360}deg)`;
+            }, spinTime);
+        }
+
+        // ==========================
+        // 🎰 SLOT LOGIC (FIXED)
+        // ==========================
+        const slotStrip = document.getElementById('slotStrip');
+        const ITEM_HEIGHT = 100; // ความสูงต้องเท่ากับ CSS .slot-item
+        
+        // สร้างรายการสล็อตแบบยาวเหยียด (Infinite Scroll)
+        function initSlot() {
+            let html = "";
+            // สร้างสัก 100 ชุด รับรองหมุนได้สะใจ
+            for (let i = 0; i < 100; i++) {
+                ITEM_LIST.forEach(item => {
+                    html += `<li class="slot-item">${item}</li>`;
+                });
+            }
+            slotStrip.innerHTML = html;
+        }
+
+        function spinSlot() {
+            if (isSpinning) return;
+            isSpinning = true;
+            document.getElementById('result').innerText = "🎰 กำลังหมุน...";
+            document.getElementById('spinBtnWheel').disabled = true;
+            document.getElementById('spinBtnSlot').disabled = true;
+
+            // 1. เทคนิค Reset: ถ้าตำแหน่งปัจจุบันมันลงไปลึกมาก ให้ดีดกลับมาข้างบนแบบเนียนๆ ก่อนหมุน
+            // (ผู้ใช้จะดูไม่ออกเพราะหน้าตามันเหมือนเดิมเป๊ะ)
+            if (currentSlotIndex > (ITEM_LIST.length * 50)) {
+                // คำนวณตำแหน่งเทียบเท่าในชุดแรกๆ
+                currentSlotIndex = currentSlotIndex % ITEM_LIST.length;
+                slotStrip.style.transition = 'none'; // ปิด Animation ชั่วคราว
+                slotStrip.style.transform = `translateY(-${currentSlotIndex * ITEM_HEIGHT}px)`;
+                // บังคับ Browser ให้อัปเดตทันที (Force Reflow)
+                void slotStrip.offsetWidth;
+            }
+
+            // 2. คำนวณเป้าหมายการหมุน
+            const winnerIndex = Math.floor(Math.random() * ITEM_LIST.length); // สุ่มผู้ชนะ (0 ถึง จำนวนของ)
+            const rounds = 5 + Math.floor(Math.random() * 3); // หมุนกี่รอบ (5-7 รอบ)
+            
+            // สูตร: ไปที่ตำแหน่งปัจจุบัน + (จำนวนรอบ * จำนวนของทั้งหมด) + (ระยะห่างถึงผู้ชนะ)
+            // เราต้องหาตำแหน่งถัดไปที่เป็น winnerIndex
+            let distanceToWinner = winnerIndex - (currentSlotIndex % ITEM_LIST.length);
+            if (distanceToWinner < 0) {
+                distanceToWinner += ITEM_LIST.length;
+            }
+            
+            const totalSteps = (rounds * ITEM_LIST.length) + distanceToWinner;
+            const targetIndex = currentSlotIndex + totalSteps;
+            const targetPixel = -(targetIndex * ITEM_HEIGHT);
+
+            // 3. เริ่มหมุน (Animation)
+            slotStrip.style.transition = "transform 4s cubic-bezier(0.25, 1, 0.5, 1)"; // กราฟการหมุนแบบสล็อต (เร็วแล้วค่อยๆ หยุด)
+            slotStrip.style.transform = `translateY(${targetPixel}px)`;
+
+            // อัปเดตตำแหน่งปัจจุบัน
+            currentSlotIndex = targetIndex;
+
+            setTimeout(() => {
+                isSpinning = false;
+                document.getElementById('spinBtnWheel').disabled = false;
+                document.getElementById('spinBtnSlot').disabled = false;
+                
+                // แสดงผล
+                const winnerText = ITEM_LIST[winnerIndex];
+                document.getElementById('result').innerHTML = "🎉 แจ็คพอตแตก: <span style='color:white;'>" + winnerText + "</span>";
+                
+                // เอฟเฟกต์สั่นหน้าจอ
+                document.getElementById('slotFrame').classList.add('shaking');
+                setTimeout(() => {
+                    document.getElementById('slotFrame').classList.remove('shaking');
+                }, 500);
+
+            }, 4000);
+        }
+
+        // ==========================
+        // 🎛 SYSTEM CONTROL
+        // ==========================
+        function switchMode(mode) {
+            if (isSpinning) return;
+            document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            document.querySelectorAll('.game-container').forEach(div => div.classList.remove('active'));
+            document.getElementById('game-' + mode).classList.add('active');
+            document.getElementById('result').innerText = "✨ พร้อมแล้วกดเลย! ✨";
+        }
+
+        // เริ่มต้นทำงาน
+        document.fonts.ready.then(function() {
+            drawWheel();
+            initSlot();
+        });
+
+    </script>
+</body>
+</html>
